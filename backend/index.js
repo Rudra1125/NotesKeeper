@@ -27,10 +27,12 @@ app.get("/api/getAll",(req,res)=>{
 });
 app.post("/api/addNew",(req,res)=>{
     console.log(req.body);
-    const { title, description } = req.body
+    const { title, tag , description } = req.body
     const notesObj = new Notes({
         title: title,
-        description: description
+        tag: tag,
+        description: description,
+        setPin: false
     });
 
     notesObj.save(err => {
@@ -60,15 +62,41 @@ app.post("/api/delete",(req,res)=>{
     })
     
 });
+app.put("/api/updatePin/:id", async (req, res) => {
+    try {
+        const { setPin } = req.body;
+        const newNote = {};
+        if (setPin) {
+            newNote.setPin = setPin;
+        }
+        let note = Notes.findById(req.params.id);
+       if (!note) {
+           return res.status(404).send(res, "Not found");
+       }
+       note = await Notes.findByIdAndUpdate(
+        req.params.id,
+        { $set: newNote },
+        { new: true }
+       );
+       res.json({ note });
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send(error.message);
+    }
+})
+
 app.put("/api/update/:id",async (req, res) => {
    try {
-    const { title, description } = req.body;
+    const { title,tag, description } = req.body;
     const newNote = {};
     if (title) {
         newNote.title = title;
     } if(description){
         newNote.description = description;
     
+    } if (tag) {
+        newNote.tag = tag;
     }
        let note = Notes.findById(req.params.id);
        if (!note) {
